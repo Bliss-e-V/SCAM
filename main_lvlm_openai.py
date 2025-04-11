@@ -53,6 +53,7 @@ def process_item(item, model_name, prompt_templates):
                         {
                             "type": "image_url",
                             "image_url": {"url": f"data:image/jpeg;base64,{image}"},
+                            "detail": "low",  # since SCAM images are resized to 512x512 anyway
                         },
                     ],
                 }
