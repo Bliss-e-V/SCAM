@@ -71,26 +71,6 @@ The evaluation scripts also support two additional datasets:
 
 2. **PAINT**: Download from [Patching Repository](https://github.com/mlfoundations/patching) and extract to `data/PAINT/`
 
-### Huggingface Authentication in Docker
-
-When using Docker containers, authenticate with Huggingface using one of these methods:
-
-1. **Using environment variables**:
-```bash
-docker run -e HUGGINGFACE_TOKEN=your_token_here scam-vlm-openclip python main_vlm_openclip.py [args]
-```
-
-2. **Mounting your local credentials**:
-```bash
-docker run -v ~/.cache/huggingface:/root/.cache/huggingface scam-vlm-openclip python main_vlm_openclip.py [args]
-```
-
-3. **Interactive login**:
-```bash
-docker run -it scam-vlm-openclip bash
-huggingface-cli login
-python main_vlm_openclip.py [args]
-```
 
 ## Usage Examples
 
