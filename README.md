@@ -39,7 +39,7 @@ docker build -t scam-vlm-openclip .
 
 ### LVLM Evaluation via OpenAI API
 ```bash
-pip install openai pandas python-dotenv tqdm pillow datasets huggingface_hub
+pip install openai pandas python-dotenv tqdm pillow datasets
 ```
 
 ### LVLM Evaluation via Ollama
