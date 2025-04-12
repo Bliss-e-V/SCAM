@@ -56,12 +56,7 @@ docker build -t scam-lvlm-ollama .
 ## Datasets
 
 ### SCAM Dataset
-The SCAM dataset is automatically downloaded from HuggingFace when running the evaluation scripts. You'll need to be logged in to Huggingface:
-
-```bash
-pip install huggingface_hub
-huggingface-cli login
-```
+The SCAM dataset is automatically downloaded from HuggingFace when running the evaluation scripts.
 
 ### Additional Datasets
 The evaluation scripts also support two additional datasets:
