@@ -23,7 +23,6 @@ This repository provides the code to run evaluations across three categories of 
 ### Prerequisites
 - Python 3.8+
 - Docker (optional, for containerized execution)
-- HuggingFace account (for automatic dataset download)
 
 ### VLM Evaluation via OpenCLIP
 ```bash
