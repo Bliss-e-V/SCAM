@@ -1,6 +1,7 @@
 # SCAM
 This repository contains evaluation code for the paper **SCAM: A Real-World Typographic Robustness Evaluation for
 Multimodal Foundation Models**.
+
 [[arXiv Preprint](https://arxiv.org/abs/2504.04893)] [[Project Page](https://bliss-e-v.github.io/SCAM-project-page/)] [[HuggingFace Dataset](https://huggingface.co/datasets/BLISS-e-V/SCAM)]
 
 ## Overview
@@ -114,8 +115,8 @@ If you find this repository useful for your research, please consider citing our
 
 ## License
 
-This project is licensed under [LICENSE](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
-We thank the authors of OpenCLIP, Ollama, and the creators of the underlying multimodal models for making their work available to the research community. We especially thank the BLISS community for making this collaborative research effort possible.
+We thank the authors of OpenCLIP, Ollama, and the creators of the underlying multimodal models for making their work available to the research community. We especially thank the [BLISS](https://bliss.berlin) community for making this collaborative research effort possible.
