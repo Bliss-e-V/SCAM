@@ -104,7 +104,7 @@ If you find this repository useful for your research, please consider citing our
 ```bibtex
 @misc{scambliss2025,
     title={SCAM: A Real-World Typographic Robustness Evaluation for Multimodal Foundation Models},
-    author={Justus Westerhoff and Erblina Purellku and Jakob Hackstein and Leo Pinetzki and Lorenz Hufe},
+    author={Justus Westerhoff and Erblina Purelku and Jakob Hackstein and Leo Pinetzki and Lorenz Hufe},
     year={2025},
     eprint={2504.04893},
     archivePrefix={arXiv},
