@@ -16,7 +16,7 @@ import torch
 import pandas as pd
 from torch.utils.data import DataLoader
 
-from utils import SCAM, RTA100, PAINT, get_dataset
+from utils import get_dataset
 
 simplefilter(action="ignore", category=DeprecationWarning)
 

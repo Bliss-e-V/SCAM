@@ -14,9 +14,6 @@ import pandas as pd
 from warnings import simplefilter
 from ollama import chat
 from utils import (
-    SCAM,
-    RTA100,
-    PAINT,
     get_dataset,
     get_prompt_templates,
     create_prompt,

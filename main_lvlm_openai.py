@@ -13,9 +13,6 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from utils import (
-    SCAM,
-    RTA100,
-    PAINT,
     get_dataset,
     get_prompt_templates,
     create_prompt,
