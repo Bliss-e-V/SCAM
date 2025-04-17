@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     libsqlite3-dev \
     wget \
-    libbz2-dev
+    libbz2-dev \
+    liblzma-dev
 
 # Download Python 3.10.14 source code
 RUN wget https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz && \

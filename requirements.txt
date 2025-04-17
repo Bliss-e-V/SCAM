@@ -1,0 +1,9 @@
+Pillow==9.5.0
+pandas
+tqdm==4.66.1
+torch==2.0.0
+torchvision==0.15.1
+numpy
+transformers==4.44.2
+ollama==0.4.7
+datasets>=2.16.0
