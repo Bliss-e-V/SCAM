@@ -15,6 +15,8 @@ import open_clip
 import torch
 import pandas as pd
 from torch.utils.data import DataLoader
+import datasets
+from pathlib import Path
 
 from utils import get_dataset
 
@@ -84,6 +86,15 @@ def main():
     print("\n #########################\n")
 
     dir = args["dir"]
+
+    # Configure HuggingFace datasets to use a PVC-accessible location based on the dir argument
+    hf_path = os.path.join(dir, "hf_datasets")
+    os.makedirs(hf_path, exist_ok=True)
+    os.environ["HF_HOME"] = hf_path
+    datasets.config.DOWNLOADED_DATASETS_PATH = Path(hf_path)
+    os.environ["hfS_CACHE"] = hf_path
+    print(f"Setting HuggingFace datasets path to: {hf_path}")
+
     eval_dataset = args["eval_dataset"]
     model_name = args["model_name"]
     pretraining_data = args["pretraining_data"]
@@ -125,7 +136,7 @@ def main():
     attack_embedding_cache = {}
 
     for batch in tqdm(dataloader, total=len(dataloader), desc="Processing batches"):
-        images = batch["image"].to(device_name)
+        images = batch["image_preprocessed"].to(device_name)
         batch_size_current = images.size(0)
         with torch.no_grad(), autocast_context:
             img_features = model.encode_image(images)
@@ -176,7 +187,7 @@ def main():
             results.append(
                 {
                     "type": batch["type"][i],
-                    "image_path": batch["image_path"][i],
+                    "id": batch["id"][i],
                     "object_label": batch["object_label"][i],
                     "attack_word": batch["attack_word"][i],
                     "postit_area_pct": batch["postit_area_pct"][i].item(),

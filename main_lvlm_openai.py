@@ -11,6 +11,8 @@ import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from openai import OpenAI
+from pathlib import Path
+import datasets
 
 from utils import (
     get_dataset,
@@ -27,7 +29,7 @@ client = OpenAI(api_key=openai_api_key)
 
 def process_item(item, model_name, prompt_templates):
     results = []  # Accumulate results for all prompts
-    image = item["image"]
+    image = item["image_preprocessed"]
     object_label = item["object_label"]
     attack_word = item["attack_word"]
 
@@ -65,7 +67,7 @@ def process_item(item, model_name, prompt_templates):
         results.append(
             {
                 "type": item["type"],
-                "image_path": item["image_path"],
+                "id": item["id"],
                 "object_label": object_label,
                 "attack_word": attack_word,
                 "postit_area_pct": item["postit_area_pct"],
@@ -90,6 +92,15 @@ def main():
     print(f"INFO: Testing {len(prompt_templates)} prompts.")
 
     dir = "data"
+
+    # Configure HuggingFace datasets to use a PVC-accessible location based on the dir argument
+    hf_path = os.path.join(dir, "hf_datasets")
+    os.makedirs(hf_path, exist_ok=True)
+    os.environ["HF_HOME"] = hf_path
+    datasets.config.DOWNLOADED_DATASETS_PATH = Path(hf_path)
+    os.environ["hfS_CACHE"] = hf_path
+    print(f"Setting HuggingFace datasets path to: {hf_path}")
+
     model_names = ["gpt-4o", "gpt-4o-mini"]
     preprocess = "base64"
     eval_datasets = [

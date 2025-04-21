@@ -1,6 +1,7 @@
 """utils.py"""
 
 import os
+import io
 import base64
 from random import random
 from PIL import Image
@@ -47,12 +48,18 @@ PROMPT_TEMPLATES = [
 ]
 
 
-def encode_image(image_path):
+def encode_image(image):
     """
     Encode an image to a Base64 string.
+    Can accept either a file path (str) or a PIL Image.
     """
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+    if isinstance(image, str):  # It's a file path
+        with open(image, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+    else:  # It's a PIL Image
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG")
+        return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
 def get_prompt_templates(l: list):
@@ -143,24 +150,15 @@ def get_dataset(data_dir, dataset_name, preprocess):
     Get the dataset class based on the provided dataset name.
     """
     if dataset_name == "SCAM":
-        dataset = SCAM(preprocess)
-        # Slice SCAM type
-        print("Slicing all SCAM images to type SCAM")
-        dataset.data = dataset.data.filter(lambda x: x["type"] == "SCAM")
+        dataset = SCAM(dataset_name, preprocess)
     elif dataset_name == "SynthSCAM":
-        dataset = SCAM(preprocess)
-        # Slice SCAM type
-        print("Slicing all SCAM images to type SynthSCAM")
-        dataset.data = dataset.data.filter(lambda x: x["type"] == "SynthSCAM")
+        dataset = SCAM(dataset_name, preprocess)
     elif dataset_name == "NoSCAM":
-        dataset = SCAM(preprocess)
-        # Slice SCAM type
-        print("Slicing all SCAM images to type NoSCAM")
-        dataset.data = dataset.data.filter(lambda x: x["type"] == "NoSCAM")
+        dataset = SCAM(dataset_name, preprocess)
     elif dataset_name == "RTA100":
-        dataset = RTA100(data_dir, preprocess=preprocess)
+        dataset = RTA100(data_dir, preprocess)
     elif dataset_name == "PAINT":
-        dataset = PAINT(data_dir, preprocess=preprocess)
+        dataset = PAINT(data_dir, preprocess)
     else:
         raise ValueError(f"Unknown evaluation dataset: {dataset_name}")
 
@@ -174,21 +172,48 @@ class BaseDataset(Dataset):
                 or None (to return a PIL Image).
     """
 
-    def __init__(self, preprocess=None):
+    def __init__(self, dataset_name, preprocessor=None):
+        self.dataset_name = dataset_name
         self.data = []
-        self.preprocess = preprocess
+        self.preprocessor = preprocessor
 
-    def load_image(self, path: str):
-        """Load image from path and preprocess it."""
-        if self.preprocess == "base64":
-            return encode_image(path)
-        pil_img = Image.open(path).convert("RGB")
-        return self.preprocess(pil_img) if callable(self.preprocess) else pil_img
+    def preprocess(self, data):
+        """
+        Load and preprocess images in parallel.
+        If preprocessor is a callable, apply it to the image.
+        If preprocessor is "base64", encode the image to Base64.
+        Can handle either a file path (str) or a PIL Image object in "image".
+        """
+
+        def preprocess_single(item):
+            image = item["image"]
+
+            if isinstance(image, str):  # It's a file path
+                if self.preprocessor == "base64":
+                    return encode_image(image)
+                pil_img = Image.open(image).convert("RGB")
+                image = (
+                    self.preprocessor(pil_img)
+                    if callable(self.preprocessor)
+                    else pil_img
+                )
+            else:  # It's already a PIL Image or similar
+                if self.preprocessor == "base64":
+                    image = encode_image(image)
+                image = (
+                    self.preprocessor(image) if callable(self.preprocessor) else image
+                )
+            item["image_preprocessed"] = image
+            return item
+
+        self.data = data.map(
+            preprocess_single,
+            num_proc=4,  # Use parallel processing
+            desc=f"Preprocessing {self.dataset_name} images",
+        )
 
     def __getitem__(self, idx):
-        item = self.data[idx].copy()
-        item["image"] = self.load_image(item["image_path"])
-        return item
+        return self.data[idx].copy()
 
     def __len__(self):
         return len(self.data)
@@ -196,119 +221,94 @@ class BaseDataset(Dataset):
 
 class SCAM(BaseDataset):
     """
-    SCAM datasets
     Data will be downloaded from HuggingFace using `datasets`.
+
+    scam_type: "SCAM", "SynthSCAM", or "NoSCAM".
     """
 
-    def __init__(self, preprocess=None):
-        super().__init__(preprocess)
-        self.data = HF.load_dataset("BLISS-e-V/SCAM", split="train").cast_column(
-            "image", HF.Image(decode=False)
+    def __init__(self, scam_type="SCAM", preprocessor=None):
+        super().__init__(scam_type, preprocessor)
+        self.scam_type = scam_type
+        self.data = HF.load_dataset(
+            "BLISS-e-V/SCAM",
+            split="train",
         )
-
-        def add_data(item):
-            return {
-                "image_path": item["image"]["path"],
-                "image_name": os.path.basename(item["image"]["path"]),
-            }
-
-        self.data = self.data.map(add_data)
+        # Filter the dataset to only include the specified type
+        self.data = self.data.filter(
+            lambda x: x["type"] == self.scam_type,
+            num_proc=4,  # Use parallel processing
+            desc=f"Filtering {self.scam_type} dataset",
+        )
+        # Preprocess images in parallel
+        self.preprocess(self.data)
 
 
 class OtherDatasets(BaseDataset):
-    """For RTA100 and PAINT"""
+    """For RTA100 and PAINT (stored locally)"""
 
-    def __init__(self, data_dir, dataset_name, preprocess=None):
-        super().__init__(preprocess)
+    def __init__(self, data_dir, dataset_name, preprocessor=None):
+        super().__init__(dataset_name, preprocessor)
         self.data_dir = data_dir
-        self.dataset_name = dataset_name
         # Assuming images are located in data_dir/dataset_name
-        dataset_path = os.path.join(data_dir, dataset_name)
-        for img in os.listdir(dataset_path):
+        dataset_path = os.path.join(data_dir, self.dataset_name)
+
+        # Get all image files
+        img_files = os.listdir(dataset_path)
+        print(f"Found {len(img_files)} images in {self.dataset_name} dataset")
+
+        # Create raw data items (without loading images yet)
+        raw_data = []
+        for img in img_files:
             img_path = os.path.join(dataset_path, img)
             object_label = img.split("_")[0].split("=")[1]
             attack_word = img.split("_")[1].split("=")[1][:-4]
 
-            self.data.append(
+            raw_data.append(
                 {
-                    "type": dataset_name,
-                    "image_path": img_path,
+                    "type": self.dataset_name,
+                    "image": img_path,  # Store path temporarily
+                    "id": img,
                     "object_label": object_label,
                     "attack_word": attack_word,
                     "postit_area_pct": float("nan"),
                 }
             )
 
+        # Use HuggingFace dataset for parallel processing
+        hf_dataset = HF.Dataset.from_list(raw_data)
+        # Preprocess images in parallel
+        self.preprocess(hf_dataset)
+        # Convert to list
+        self.data = list(self.data)
+
 
 class RTA100(OtherDatasets):
     """
-    RTA100 dataset
+    RTA100 dataset.
     Get the data from
     https://github.com/azuma164/Defense-Prefix
     and extract it to RTA100 folder under data_dir.
     """
 
-    def __init__(self, data_dir, preprocess=None):
+    def __init__(self, data_dir, preprocessor=None):
         if not os.path.exists(os.path.join(data_dir, "RTA100")):
             raise FileNotFoundError(
                 f"RTA100 folder not found in {data_dir}. Please download and extract the dataset."
             )
-        super().__init__(data_dir, "RTA100", preprocess)
+        super().__init__(data_dir, "RTA100", preprocessor)
 
 
 class PAINT(OtherDatasets):
     """
-    PAINT dataset
+    PAINT dataset.
     Get the data from
     https://github.com/mlfoundations/patching
     and extract it to PAINT folder under data_dir.
     """
 
-    def __init__(self, data_dir, preprocess=None):
+    def __init__(self, data_dir, preprocessor=None):
         if not os.path.exists(os.path.join(data_dir, "PAINT")):
             raise FileNotFoundError(
                 f"PAINT folder not found in {data_dir}. Please download and extract the dataset."
             )
-        super().__init__(data_dir, "PAINT", preprocess)
-
-
-# class Materzynska(BaseDataset):
-#     def __init__(self, data_dir, preprocess=None):
-#         """
-#         Expects labels in the format:
-#         {
-#             "IMG_2934.JPG": {"true object": "cup", "typographic attack label": ""},
-#             ...
-#         }
-
-#         For Materzynska dataset, for example.
-#         """
-#         super().__init__(preprocess)
-#         self.data_dir = data_dir
-#         self.dataset_name = "Materzynska"
-#         # Assuming images and labels are located in data_dir/dataset_name
-#         dataset_path = os.path.join(data_dir, dataset_name)
-
-#         labels = json.load(open(os.path.join(dataset_path, "annotations.json")))
-#         for img_file, label_info in labels.items():
-#             img_path = os.path.join(dataset_path, img_file)
-#             if not os.path.exists(img_path):
-#                 raise FileNotFoundError(f"Image file {img_path} not found.")
-#             object_label = label_info.get("true object", "")
-#             if object_label == "":
-#                 raise ValueError(f"Missing 'true object' label for {img_file}.")
-#             attack_word = label_info.get("typographic attack label", "")
-#             if attack_word == "":
-#                 dataset_name = "NO" + self.dataset_name
-#             # TODO: What to do with the attack word in this case? SIMPLY add rows that
-#             #  compare this image with all other attack words? like NoSCAM?
-#             # TODO: need to do SOMETHING here. But maybe RTA100 is already good enough for us  :)
-#             self.data.append(
-#                 {
-#                     "dataset": dataset_name,
-#                     "image_path": img_path,
-#                     "object_label": label_info.get("true object", ""),
-#                     "attack_word": label_info.get("typographic attack label", ""),
-#                     "postit_area_pct": None,
-#                 }
-#             )
+        super().__init__(data_dir, "PAINT", preprocessor)

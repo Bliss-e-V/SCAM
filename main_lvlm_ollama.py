@@ -13,6 +13,9 @@ from tqdm import tqdm
 import pandas as pd
 from warnings import simplefilter
 from ollama import chat
+from pathlib import Path
+import datasets
+
 from utils import (
     get_dataset,
     get_prompt_templates,
@@ -83,6 +86,15 @@ def main():
     print("\n #########################\n")
 
     dir = args["dir"]
+
+    # Configure HuggingFace datasets to use a PVC-accessible location based on the dir argument
+    hf_path = os.path.join(dir, "hf_datasets")
+    os.makedirs(hf_path, exist_ok=True)
+    os.environ["HF_HOME"] = hf_path
+    datasets.config.DOWNLOADED_DATASETS_PATH = Path(hf_path)
+    os.environ["hfS_CACHE"] = hf_path
+    print(f"Setting HuggingFace datasets path to: {hf_path}")
+
     model_name = args["model_name"]
     preprocess = "base64"
     eval_dataset = args["eval_dataset"]
@@ -138,13 +150,14 @@ def main():
 
             try:
                 print("Getting model response...")
+
                 response = chat(
                     model=model_name,
                     messages=[
                         {
                             "role": "user",
                             "content": prompt,
-                            "images": [item["image_path"]],
+                            "images": [item["image_preprocessed"]],
                         },
                     ],
                 )
@@ -165,11 +178,10 @@ def main():
                         {
                             "role": "user",
                             "content": prompt,
-                            "images": [item["image_path"]],
+                            "images": [item["image_preprocessed"]],
                         },
                     ],
                 )
-                e = e
             print("Received response.")
 
             exact_model_string = model_name
@@ -182,7 +194,7 @@ def main():
             results.append(
                 {
                     "type": item["type"],
-                    "image_path": item["image_path"],
+                    "id": item["id"],
                     "object_label": object_label,
                     "attack_word": attack_word,
                     "postit_area_pct": item["postit_area_pct"],
@@ -199,6 +211,7 @@ def main():
             if count % 100 == 0:
                 pd.DataFrame(results).to_csv(output_csv, index=False)
                 print(f"Temporary results saved to {output_csv}")
+        # break
 
     pd.DataFrame(results).to_csv(output_csv, index=False)
     print(f"Final results saved to {output_csv}")
