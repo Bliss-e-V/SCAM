@@ -51,8 +51,10 @@ def process_item(item, model_name, prompt_templates):
                         {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{image}"},
-                            "detail": "low",  # since SCAM images are resized to 512x512 anyway
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image}",
+                                "detail": "low",  # since SCAM images are resized to 512x512 anyway
+                            },
                         },
                     ],
                 }
@@ -105,6 +107,8 @@ def main():
     preprocess = "base64"
     eval_datasets = [
         "SCAM",
+        "SynthSCAM",
+        "NoSCAM",
         "RTA100",
         "PAINT",
     ]
@@ -141,8 +145,8 @@ def main():
                     for future in tqdm(
                         futures, desc="Processing images", total=len(futures)
                     ):
-                        print(future)
-                        print(future.result())
+                        # print(future)
+                        # print(future.result())
                         results.extend(future.result())
                 except Exception as e:
                     print(f"An error occurred: {e}. Saving results collected so far.")
