@@ -237,7 +237,7 @@ class SCAM(BaseDataset):
         self.data = self.data.filter(
             lambda x: x["type"] == self.scam_type,
             num_proc=4,  # Use parallel processing
-            desc=f"Filtering {self.scam_type} dataset",
+            desc=f"Filtering SCAM dataset to {self.scam_type} only.",
         )
         # Preprocess images in parallel
         self.preprocess(self.data)
