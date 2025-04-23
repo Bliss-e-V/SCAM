@@ -66,7 +66,7 @@ def main():
         print("Using default parameters.")
         args = {
             "dir": "data",
-            "eval_dataset": "SynthSCAM",
+            "eval_dataset": "SCAM",
             "model_name": "ViT-B-32",
             "pretraining_data": "laion2b_s34b_b79k",
             "device_name": "cpu",
@@ -119,6 +119,11 @@ def main():
     model.to(device_name)
 
     dataset = get_dataset(dir, eval_dataset, preprocess)
+    # Forget "image" column (and only keep "image_preprocessed") to be able to
+    #  work with torch dataloader batches
+    dataset = dataset.data.remove_columns("image")
+    # Cast "image_preprocessed" into torch tensor
+    dataset = dataset.with_format("torch")
 
     dataloader = DataLoader(
         dataset,
