@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.6.3 AS base
+FROM ollama/ollama:0.6.7 AS base
 
 RUN apt-get update
 

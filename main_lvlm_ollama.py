@@ -35,10 +35,30 @@ signal.signal(signal.SIGALRM, timeout_handler)
 
 def start_ollama():
     print("Starting Ollama...")
-    subprocess.Popen(
+    process = subprocess.Popen(
         ["ollama", "start"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    time.sleep(5)
+
+    # Wait longer for Ollama to start and be ready
+    for i in range(30):  # 30 seconds with status updates
+        if i % 5 == 0:  # Show message every 5 seconds
+            print(f"Waiting for Ollama to start... ({i}/30 seconds)")
+        time.sleep(1)
+
+        # Check if Ollama is responding
+        try:
+            # Simple ping to check if the server is ready
+            subprocess.check_output(
+                ["ollama", "list"], stderr=subprocess.STDOUT, text=True
+            )
+            print("Ollama is ready!")
+            return True
+        except subprocess.CalledProcessError:
+            # Ollama is not ready yet
+            pass
+
+    print("Warning: Ollama might not be fully started yet")
+    return False
 
 
 def kill_first_process(match_str):
@@ -62,7 +82,7 @@ def kill_first_process(match_str):
 
 def main():
     """main function to manage the experiments"""
-    prompt_templates = get_prompt_templates([1, 2, 3, 4, 5, 6, 7])
+    prompt_templates = get_prompt_templates([1, 5])  # 1,2,3,4,5,6,7
     print(f"INFO: Testing {len(prompt_templates)} prompts.")
 
     if len(sys.argv) == 1:
@@ -162,29 +182,54 @@ def main():
                     ],
                 )
                 signal.alarm(0)  # Cancel alarm if finished in time
-            except (TimeoutError, httpx.ReadTimeout) as e:
+            except (TimeoutError, httpx.ReadTimeout):
                 print(
                     "Response took longer than wait_sec seconds... killing processes..."
                 )
                 kill_first_process("ollama_models")
                 kill_first_process("ollama start")
 
-                # Start ollama again
-                start_ollama()
+                # Start ollama again with improved waiting
+                ollama_ready = start_ollama()
 
-                response = chat(
-                    model=model_name,
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": prompt,
-                            "images": [item["image_preprocessed"]],
-                        },
-                    ],
-                )
+                # Try multiple times to connect to Ollama
+                max_retries = 3
+                for retry in range(max_retries):
+                    try:
+                        print(
+                            f"Attempt {retry+1}/{max_retries} to get model response..."
+                        )
+                        response = chat(
+                            model=model_name,
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": prompt,
+                                    "images": [item["image_preprocessed"]],
+                                },
+                            ],
+                        )
+                        print("Successfully received response.")
+                        break
+                    except ConnectionError as ce:
+                        print(f"Connection error: {ce}")
+                        if retry < max_retries - 1:
+                            print(f"Waiting 10 more seconds before retry...")
+                            time.sleep(10)
+                        else:
+                            print(
+                                "All retries failed. Saving partial results and exiting."
+                            )
+                            pd.DataFrame(results).to_csv(output_csv, index=False)
+                            sys.exit(1)
             print("Received response.")
+            time.sleep(0.75)  # to avoid too fast requests
 
             exact_model_string = model_name
+            # TODO: print response to check if there is also a thinking part
+            print("response:", response)
+            print("response message:", response.message)
+
             answer = response.message.content
 
             processed_answer = process_answer(
