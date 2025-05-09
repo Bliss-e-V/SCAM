@@ -54,6 +54,17 @@ cp lvlm_ollama/Dockerfile .
 docker build -t scam-lvlm-ollama .
 ```
 
+### LVLM Evaluation via LLaVA
+See our [LLaVA fork](https://github.com/Bliss-e-V/LLaVA-OpenCLIP) adapted to work with custom OpenCLIP vision encoders.
+
+For Docker:
+```bash
+cp lvlm_llava/Dockerfile .
+docker build -t scam-lvlm-ollama .
+```
+
+Note that you need to build a Docker container with the above mentioned LLaVA fork first.
+
 ## Datasets
 
 ### SCAM Dataset
@@ -94,6 +105,14 @@ python main_lvlm_openai.py
 ```bash
 python main_lvlm_ollama.py \
   --model_name llava:34b \
+  --eval_dataset SCAM
+```
+
+### LVLM Evaluation via LLaVA
+```bash
+python main_lvlm_llava.py \
+  --model_name llava-7b-UCSC \
+  --model_path /llava-checkpoints/llava-v1.5-7b-UCSC-VLAA-ViT-L-14-CLIPA-336-datacomp1B-bs2-bf16-zero2-11.8 \
   --eval_dataset SCAM
 ```
 
