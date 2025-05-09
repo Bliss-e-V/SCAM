@@ -168,6 +168,7 @@ def get_dataset(data_dir, dataset_name, preprocess):
 class BaseDataset(Dataset):
     """
     preprocess: Either "base64" to return the image as a Base64 string,
+                "pil" to return the image as a PIL object,
                 a callable that takes a PIL Image and returns a transformed image,
                 or None (to return a PIL Image).
     """
@@ -182,6 +183,7 @@ class BaseDataset(Dataset):
         Load and preprocess images in parallel.
         If preprocessor is a callable, apply it to the image.
         If preprocessor is "base64", encode the image to Base64.
+        If preprocessor is "pil", store the image as a PIL object.
         Can handle either a file path (str) or a PIL Image object in "image".
         """
 
@@ -190,7 +192,14 @@ class BaseDataset(Dataset):
 
             if isinstance(image, str):  # It's a file path
                 if self.preprocessor == "base64":
-                    return encode_image(image)
+                    encoded = encode_image(image)
+                    item["image_preprocessed"] = encoded
+                    return item
+                elif self.preprocessor == "pil":
+                    # Just load as PIL Image
+                    item["image_preprocessed"] = Image.open(image).convert("RGB")
+                    return item
+                # For other preprocessors (callable or None)
                 pil_img = Image.open(image).convert("RGB")
                 image = (
                     self.preprocessor(pil_img)
@@ -199,7 +208,14 @@ class BaseDataset(Dataset):
                 )
             else:  # It's already a PIL Image or similar
                 if self.preprocessor == "base64":
-                    image = encode_image(image)
+                    encoded = encode_image(image)
+                    item["image_preprocessed"] = encoded
+                    return item
+                elif self.preprocessor == "pil":
+                    # It's already a PIL Image
+                    item["image_preprocessed"] = image
+                    return item
+                # For other preprocessors (callable or None)
                 image = (
                     self.preprocessor(image) if callable(self.preprocessor) else image
                 )
