@@ -116,6 +116,41 @@ python main_lvlm_llava.py \
   --eval_dataset SCAM
 ```
 
+## Results
+
+The following table shows the performance of various Vision-Language Models (VLMs) and Large Vision-Language Models (LVLMs) on the SCAM datasets. The table highlights the accuracy differences between the NoSCAM dataset and the SCAM dataset, showing how much performance drops when typographic attacks are introduced.
+
+Note that internally all LLaVA models utilize `ViT-L-14-336` trained by OpenAI for the image encoding.
+
+| **Model**                                | **Training data** | **NoSCAM Accuracy (%)** | **SCAM Accuracy (%)** | **Accuracy Drop (↓)** |
+| ---------------------------------------- | ----------------- | ----------------------- | --------------------- | --------------------- |
+| **Vision-Language Models (VLMs)**        |                   |                         |                       |                       |
+| `RN50`                                   | `openai`          | 97.76                   | 36.61                 | ↓61.15                |
+| `ViT-B-32`                               | `laion2b`         | 98.45                   | 74.68                 | ↓23.77                |
+| `ViT-B-16`                               | `laion2b`         | 98.71                   | 69.16                 | ↓29.55                |
+| `ViT-B-16-SigLIP`                        | `webli`           | 99.22                   | 81.40                 | ↓17.82                |
+| `ViT-L-14`                               | `commonpool_xl`   | 99.48                   | 74.68                 | ↓24.80                |
+| `ViT-L-14`                               | `openai`          | 99.14                   | 40.14                 | ↓59.00                |
+| `ViT-L-14-336`                           | `openai`          | 99.22                   | 33.85                 | ↓65.37                |
+| `ViT-g-14`                               | `laion2b`         | 99.05                   | 61.93                 | ↓37.12                |
+| `ViT-bigG-14`                            | `laion2b`         | 99.40                   | 70.89                 | ↓28.51                |
+| **Large Vision-Language Models (LVLMs)** |                   |                         |                       |                       |
+| `llava-llama3-1.1:8b`                    | -                 | 98.09                   | 39.50                 | ↓58.59                |
+| `llava-1.6:7b`                           | -                 | 97.50                   | 58.43                 | ↓39.07                |
+| `llava-1.6:13b`                          | -                 | 98.88                   | 58.00                 | ↓40.88                |
+| `llava-1.6:34b`                          | -                 | 98.97                   | 84.85                 | ↓14.11                |
+| `gemma3:4b`                              | -                 | 97.24                   | 58.05                 | ↓39.19                |
+| `gemma3:12b`                             | -                 | 99.14                   | 52.02                 | ↓47.12                |
+| `gemma3:27b`                             | -                 | 97.42                   | 81.67                 | ↓15.75                |
+| `llama3.2-vision:90b`                    | -                 | 98.88                   | 71.01                 | ↓27.87                |
+| `llama4:scout`                           | -                 | 99.23                   | 88.12                 | ↓11.10                |
+| `gpt-4o-mini`                            | -                 | 99.40                   | 84.68                 | ↓14.72                |
+| `gpt-4o`                                 | -                 | 99.48                   | 96.82                 | ↓2.67                 |
+
+You can reproduce these results by running the evaluation scripts as described in the [Usage Examples](#usage-examples) section.
+
+For the full list of all 110 models evaluated, please refer to the table in the appendix of our [paper](https://arxiv.org/abs/2504.04893).
+
 ## Citation
 
 If you find this repository useful for your research, please consider citing our paper:
