@@ -130,7 +130,7 @@ def query_llava_model(
 
 def main():
     """main function to manage the experiments"""
-    prompt_templates = get_prompt_templates([1, 5])  # 1,2,3,4,5,6,7
+    prompt_templates = get_prompt_templates([1, 5])  # ([1, 5])  # 1,2,3,4,5,6,7
     print(f"INFO: Testing {len(prompt_templates)} prompts.")
 
     if len(sys.argv) == 1:
