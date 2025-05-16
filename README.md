@@ -55,7 +55,7 @@ docker build -t scam-lvlm-ollama .
 ```
 
 ### LVLM Evaluation via LLaVA
-See our [LLaVA fork](https://github.com/Bliss-e-V/LLaVA-OpenCLIP) that is adapted to work with custom OpenCLIP vision encoders and explains how we train the custom LLaVA version evaluated in our paper in appendix A.6.
+See our [`LLaVA` fork](https://github.com/Bliss-e-V/LLaVA-OpenCLIP) that is adapted to work with custom OpenCLIP vision encoders and explains how we train the custom LLaVA version evaluated in our paper in appendix A.6.
 
 For Docker:
 ```bash
@@ -118,7 +118,7 @@ python main_lvlm_llava.py \
 
 ### LVLM Evalution via VLMEvalKit
 
-see our fork of `VLMEvalKit`: https://github.com/Bliss-e-V/VLMEvalKit
+See our [`VLMEvalKit` fork](https://github.com/Bliss-e-V/VLMEvalKit).
 
 ## Results
 
