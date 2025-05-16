@@ -116,6 +116,10 @@ python main_lvlm_llava.py \
   --eval_dataset SCAM
 ```
 
+### LVLM Evalution via VLMEvalKit
+
+see our fork of `VLMEvalKit`: https://github.com/Bliss-e-V/VLMEvalKit
+
 ## Results
 
 The following table shows the performance of various Vision-Language Models (VLMs) and Large Vision-Language Models (LVLMs) on the SCAM datasets. The table highlights the accuracy differences between the NoSCAM dataset and the SCAM dataset, showing how much performance drops when typographic attacks are introduced.
