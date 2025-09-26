@@ -14,10 +14,11 @@ Our key findings include:
 3. LVLMs, such as the LLaVA family, exhibit vulnerabilities to typographic attacks, reflecting weaknesses inherited from their vision encoders
 4. Employing larger LLM backbones reduces susceptibility to typographic attacks in LVLMs while also improving their textual understanding
 
-This repository provides the code to run evaluations across three categories of multimodal models:
+This repository provides the code to run evaluations across four categories of multimodal models:
 1. Vision-Language Models (VLMs) via OpenCLIP (`main_vlm_openclip.py`)
 2. Large Vision-Language Models (LVLMs) via OpenAI's API (`main_lvlm_openai.py`)
-3. Open-access LVLMs via Ollama (`main_lvlm_ollama.py`)
+3. Large Vision-Language Models (LVLMs) via Anthropic Claude API (`main_lvlm_claude.py`)
+4. Open-access LVLMs via Ollama (`main_lvlm_ollama.py`)
 
 ## Installation
 
@@ -37,10 +38,20 @@ cp vlm_openclip/Dockerfile .
 docker build -t scam-vlm-openclip .
 ```
 
+
+
 ### LVLM Evaluation via OpenAI API
 ```bash
-pip install openai pandas python-dotenv tqdm pillow datasets
+pip install openai pandas python-dotenv tqdm pillow datasets torch
 ```
+
+
+
+### LVLM Evaluation via Anthropic Claude
+```bash
+pip install anthropic pandas python-dotenv tqdm pillow datasets torch
+```
+
 
 ### LVLM Evaluation via Ollama
 ```bash
@@ -90,15 +101,25 @@ python main_vlm_openclip.py \
   --batch_size 16
 ```
 
+
 ### LVLM Evaluation via OpenAI API
 Create a `.env` file with your OpenAI API key:
 ```
 OPENAI_API_KEY=your_key_here
 ```
-
 Run the evaluation:
 ```bash
 python main_lvlm_openai.py
+```
+
+### LVLM Evaluation via Anthropic Claude
+Create a `.env` file with your Anthropic API key:
+```
+ANTHROPIC_API_KEY=your_key_here
+```
+Run the evaluation:
+```bash
+python main_lvlm_claude.py
 ```
 
 ### LVLM Evaluation via Ollama
@@ -126,31 +147,32 @@ The following table shows the performance of various Vision-Language Models (VLM
 
 Note that internally all LLaVA models that we evaluate utilize `ViT-L-14-336` trained by OpenAI for the image encoding. Furthermore, `ViT-bigG-14` trained on `laion2b` is used in the Kandinsky diffusion model.
 
-| **Model**                                | **Training data** | **NoSCAM Accuracy (%)** | **SCAM Accuracy (%)** | **Accuracy Drop (↓)** |
-| ---------------------------------------- | ----------------- | ----------------------- | --------------------- | --------------------- |
-| **Vision-Language Models (VLMs)**        |                   |                         |                       |                       |
-| `RN50`                                   | `openai`          | 97.76                   | 36.61                 | ↓61.15                |
-| `ViT-B-32`                               | `laion2b`         | 98.45                   | 74.68                 | ↓23.77                |
-| `ViT-B-16`                               | `laion2b`         | 98.71                   | 69.16                 | ↓29.55                |
-| `ViT-B-16-SigLIP`                        | `webli`           | 99.22                   | 81.40                 | ↓17.82                |
-| `ViT-L-14`                               | `commonpool_xl`   | 99.48                   | 74.68                 | ↓24.80                |
-| `ViT-L-14`                               | `openai`          | 99.14                   | 40.14                 | ↓59.00                |
-| `ViT-L-14-336`                           | `openai`          | 99.22                   | 33.85                 | ↓65.37                |
-| `ViT-L-14-CLIPA-336`                     | `datacomp1b`      | 99.57                   | 74.76                 | ↓24.81                |
-| `ViT-g-14`                               | `laion2b`         | 99.05                   | 61.93                 | ↓37.12                |
-| `ViT-bigG-14`                            | `laion2b`         | 99.40                   | 70.89                 | ↓28.51                |
-| **Large Vision-Language Models (LVLMs)** |                   |                         |                       |                       |
-| `llava-llama3:8b`                        | -                 | 98.09                   | 39.50                 | ↓58.59                |
-| `llava:7b-v1.6`                          | -                 | 97.50                   | 58.43                 | ↓39.07                |
-| `llava:13b-v1.6`                         | -                 | 98.88                   | 58.00                 | ↓40.88                |
-| `llava:34b-v1.6`                         | -                 | 98.97                   | 84.85                 | ↓14.11                |
-| `gemma3:4b`                              | -                 | 97.24                   | 58.05                 | ↓39.19                |
-| `gemma3:12b`                             | -                 | 99.14                   | 52.02                 | ↓47.12                |
-| `gemma3:27b`                             | -                 | 97.42                   | 81.67                 | ↓15.75                |
-| `llama3.2-vision:90b`                    | -                 | 98.88                   | 71.01                 | ↓27.87                |
-| `llama4:scout`                           | -                 | 99.23                   | 88.12                 | ↓11.10                |
-| `gpt-4o-mini-2024-07-18`                 | -                 | 99.40                   | 84.68                 | ↓14.72                |
-| `gpt-4o-2024-08-06`                      | -                 | 99.48                   | 96.82                 | ↓2.67                 |
+| **Model**                                | **Training data** | **NoSCAM Accuracy (%)** | **SCAM Accuracy (%)** | **SCAM Accuracy Drop (↓)** |
+| ---------------------------------------- | ----------------- | ----------------------- | --------------------- | -------------------------- |
+| **Vision-Language Models (VLMs)**        |                   |                         |                       |                            |
+| `RN50`                                   | `openai`          | 97.76                   | 36.61                 | ↓61.15                     |
+| `ViT-B-32`                               | `laion2b`         | 98.45                   | 74.68                 | ↓23.77                     |
+| `ViT-B-16`                               | `laion2b`         | 98.71                   | 69.16                 | ↓29.55                     |
+| `ViT-B-16-SigLIP`                        | `webli`           | 99.22                   | 81.40                 | ↓17.82                     |
+| `ViT-L-14`                               | `commonpool_xl`   | 99.48                   | 74.68                 | ↓24.80                     |
+| `ViT-L-14`                               | `openai`          | 99.14                   | 40.14                 | ↓59.00                     |
+| `ViT-L-14-336`                           | `openai`          | 99.22                   | 33.85                 | ↓65.37                     |
+| `ViT-L-14-CLIPA-336`                     | `datacomp1b`      | 99.57                   | 74.76                 | ↓24.81                     |
+| `ViT-g-14`                               | `laion2b`         | 99.05                   | 61.93                 | ↓37.12                     |
+| `ViT-bigG-14`                            | `laion2b`         | 99.40                   | 70.89                 | ↓28.51                     |
+| **Large Vision-Language Models (LVLMs)** |                   |                         |                       |                            |
+| `llava-llama3:8b`                        | -                 | 98.09                   | 39.50                 | ↓58.59                     |
+| `llava:7b-v1.6`                          | -                 | 97.50                   | 58.43                 | ↓39.07                     |
+| `llava:13b-v1.6`                         | -                 | 98.88                   | 58.00                 | ↓40.88                     |
+| `llava:34b-v1.6`                         | -                 | 98.97                   | 84.85                 | ↓14.11                     |
+| `gemma3:4b`                              | -                 | 97.24                   | 58.05                 | ↓39.19                     |
+| `gemma3:12b`                             | -                 | 99.14                   | 52.02                 | ↓47.12                     |
+| `gemma3:27b`                             | -                 | 97.42                   | 81.67                 | ↓15.75                     |
+| `llama3.2-vision:90b`                    | -                 | 98.88                   | 71.01                 | ↓27.87                     |
+| `llama4:scout`                           | -                 | 99.23                   | 88.12                 | ↓11.10                     |
+| `gpt-4o-mini-2024-07-18`                 | -                 | 99.40                   | 84.68                 | ↓14.72                     |
+| `claude-sonnet-4-20250514`               | -                 | 99.31                   | 91.13                 | ↓8.18                      |
+| `gpt-4o-2024-08-06`                      | -                 | 99.48                   | 96.82                 | ↓2.67                      |
 
 You can reproduce these results by running the evaluation scripts as described in the [Usage Examples](#usage-examples) section.
 
