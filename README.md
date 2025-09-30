@@ -176,7 +176,7 @@ Note that internally all LLaVA models that we evaluate utilize `ViT-L-14-336` tr
 
 You can reproduce these results by running the evaluation scripts as described in the [Usage Examples](#usage-examples) section.
 
-For the full list of all 110 models evaluated, please refer to the table in the appendix of our [paper](https://arxiv.org/abs/2504.04893).
+For the full list of all 111 models evaluated, please refer to the table in the appendix of our [paper](https://arxiv.org/abs/2504.04893).
 
 ## Citation
 
